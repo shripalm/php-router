@@ -1,4 +1,8 @@
 <?php
     define('BASE_URL', '/php-router/');
-    define('ERR_404_ROUTE', BASE_URL.'404');
+
+    define('HOST', 'localhost');
+    define('USER', 'root');
+    define('PASS', '');
+    define('DB', 'medidoc');
 ?>
