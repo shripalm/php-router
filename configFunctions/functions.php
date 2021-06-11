@@ -47,7 +47,7 @@
         return explode(' ', $headers)[1];
     }
 
-    function essentialCall(){
+    function essentialCall($auth){
         checkContentType();
-        return getBearerToken();
+        if($auth) getBearerToken();
     }

@@ -3,13 +3,15 @@
     $callRequest = $request[1];
 
     $routes = [
-        "register"=> "POST",
-        "login"=> "POST"
+        "register"=> ["method" => "GET", "auth" => false],
+        "login"=> ["method" => "POST", "auth" => true]
     ];
 
     if (isset($routes[$callRequest])) {
-        if(!(strtoupper($method) == $routes[$callRequest])) retResponse(405, 'Invalid Method');
-        essentialCall();
+        $currMethod = $routes[$callRequest]['method'];
+        $currAuth = $routes[$callRequest]['auth'];
+        if(!(strtoupper($method) == $currMethod)) retResponse(405, 'Invalid Method');
+        essentialCall($currMethod, $currAuth);
         $data = getJsonFromBody();
         include_once($callRequest . '.php');
     }
