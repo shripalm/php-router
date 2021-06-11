@@ -1,5 +1,7 @@
 <?php
     include_once('constants.php');
+
+    // Commented below line is for not get into trouble on production
     // error_reporting(0);
 
     $conn = new mysqli(HOST, USER, PASS, DB);
@@ -15,6 +17,8 @@
 
         $contentType = explode(';', $_SERVER['CONTENT_TYPE'])[0];
 
+        // These are only content type which is valid in whole app
+        // However You can change it accordingly
         $validContentType = [
             "application/json",
             "multipart/form-data"
