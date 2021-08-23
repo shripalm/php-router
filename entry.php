@@ -4,6 +4,7 @@
 
     // Adding [/] to Requested URL at the end if not
     if(! ($_SERVER['REQUEST_URI'])[-1] !== '/') $_SERVER['REQUEST_URI'] .= '/';
+    $_SERVER['REQUEST_URI'] = ltrim($_SERVER['REQUEST_URI'], '/');
     
     // Trimming Base url [defined in constants] from the Requested URL and converting to array exploding with [/]
     $request = explode('/', str_replace(BASE_URL, "", $_SERVER['REQUEST_URI']));

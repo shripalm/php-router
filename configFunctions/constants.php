@@ -1,11 +1,9 @@
 <?php
-    define('BASE_URL', '/php-router/');
+    define('BASE_URL', 'php-router/');
     /*
         valid Base URL Examples-->
-            /php-router/
-            localhost/php-router/
-            http://localhost/php-router/
-            https://root.domain/your-folder/
+            php-router/
+            null
     */
 
     // Database Constants

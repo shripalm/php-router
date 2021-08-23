@@ -2,7 +2,7 @@
     include_once('constants.php');
 
     // Commented below line is for not get into trouble on production
-    // error_reporting(0);
+    // error_reporting(1);
 
     $conn = new mysqli(HOST, USER, PASS, DB);
 
@@ -13,7 +13,7 @@
     }
 
     function checkContentType(){
-        if(! isset($_SERVER['CONTENT_TYPE'])) retResponse(406, 'Invalid Content Type');
+        if(! isset($_SERVER['CONTENT_TYPE'])) $_SERVER['CONTENT_TYPE'] = '';
 
         $contentType = explode(';', $_SERVER['CONTENT_TYPE'])[0];
 
@@ -21,7 +21,8 @@
         // However You can change it accordingly
         $validContentType = [
             "application/json",
-            "multipart/form-data"
+            "multipart/form-data",
+            ''
         ];
 
         if(! in_array($contentType, $validContentType)) retResponse(406, 'Invalid Content Type');

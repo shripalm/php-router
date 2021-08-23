@@ -16,7 +16,9 @@
     ];
 
     if (isset($routes[$callRequest])) {
-        if (! file_exists($callRequest . '.php')) retResponse(404, 'Route Defined, File Not Found');
+        
+        $fileName = __DIR__ . '/' . $callRequest . '.php';
+        if (! file_exists($fileName)) retResponse(404, 'Route Defined, File Not Found');
         $currMethod = $routes[$callRequest]['method'];
         $currAuth = $routes[$callRequest]['auth'];
         if(!(strtoupper($method) == $currMethod)) retResponse(405, 'Invalid Method');
@@ -28,7 +30,7 @@
             
             Hence, checkContentType invokes every time it should require some content all the time
         */
-        essentialCall($currMethod, $currAuth);
+        essentialCall($currAuth);
 
         /*
             Gets json from the body, means you must pass json every time
@@ -40,6 +42,6 @@
                 $data = $_GET
         */
         $data = getJsonFromBody();
-        include_once($callRequest . '.php');
+        include_once($fileName);
     }
     else retResponse(404, 'Invalid Route');
