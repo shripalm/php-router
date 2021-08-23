@@ -3,7 +3,6 @@ Scope      : Specially Designed For API Handling In PHP
 Version    : 0.1
 
 Prerequisite -->
- --> .htaccess file must be runnable
  --> PHP LTS Version or Higher
 
 Rules -->
