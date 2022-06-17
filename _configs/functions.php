@@ -1,16 +1,10 @@
 <?php
-    include_once('constants.php');
-
     // Commented below line is for not get into trouble on production
     // error_reporting(1);
 
-    $conn = new mysqli(HOST, USER, PASS, DB);
+    // $conn = new mysqli(HOST, USER, PASS, DB);
 
-    function retResponse($code, $message, $data=[]){
-        http_response_code($code);
-        echo json_encode(["msg"=>$message,"data"=>$data]);
-        exit;
-    }
+    $routes = [];
 
     function checkContentType(){
         if(! isset($_SERVER['CONTENT_TYPE'])) $_SERVER['CONTENT_TYPE'] = '';
@@ -55,4 +49,45 @@
     function essentialCall($auth){
         checkContentType();
         if($auth) getBearerToken();
+    }
+
+    function registerRoute($route, $path, $method='GET', $auth=false){
+        $GLOBALS['all_routes'][$method][$route] = ["path"=>$path, "method"=> $method, "auth"=> $auth];
+    }
+
+    function routeExtractor(){
+        $routeWithoutQueryParams = explode('?', $_SERVER['REQUEST_URI'])[0];
+        $routeWithoutBaseURL = str_replace(BASE_URL, "", $routeWithoutQueryParams);
+        $route = str_replace('//', '/', $routeWithoutBaseURL);
+        if($route[0] !== '/') $route = '/'.$route;
+        return $route; 
+    }
+
+    function routeMatcher($method){
+        $success = true;
+        $matchedRoute = [];
+        $route = explode('/', $GLOBALS['requestedRoute']);
+        $all_routes = $GLOBALS['all_routes'][$method];
+        foreach ($all_routes as $key => $value) {
+            $success = true;
+            $routeToCheck = explode('/', $key);
+            foreach ($routeToCheck as $rtc_key => $rtc_value){
+                if($rtc_value[0] === ':') {
+                    $GLOBALS['route_params'][ltrim($rtc_value, ':')] = $route[$rtc_key];
+                }
+                else{
+                    if($rtc_value !== $route[$rtc_key]){
+                        $success = false;
+                        break;
+                    }
+                }
+            }
+            if($success) {
+                $matchedRoute = $value;
+                $matchedRoute['route_params'] = $GLOBALS['route_params'];
+                break;
+            }
+        }
+        if(!$success || ($all_routes === null)) retResponse(404, 'Invalid Route');
+        return $matchedRoute;
     }
