@@ -48,7 +48,10 @@
 
     function essentialCall($auth){
         checkContentType();
-        if($auth) getBearerToken();
+        if($auth){
+            $token = getBearerToken();
+            $GLOBALS['bearer_token']['encoded'] = $token;
+        }
     }
 
     function registerRoute($route, $path, $method='GET', $auth=false){
@@ -56,8 +59,12 @@
     }
 
     function routeExtractor(){
+        function str_replace_first($search, $replace, $subject){
+            $search = '/'.preg_quote($search, '/').'/';
+            return preg_replace($search, $replace, $subject, 1);
+        }
         $routeWithoutQueryParams = explode('?', $_SERVER['REQUEST_URI'])[0];
-        $routeWithoutBaseURL = str_replace(BASE_URL, "", $routeWithoutQueryParams);
+        $routeWithoutBaseURL = str_replace_first(BASE_URL, "", $routeWithoutQueryParams);
         $route = str_replace('//', '/', $routeWithoutBaseURL);
         if($route[0] !== '/') $route = '/'.$route;
         return $route; 
@@ -90,4 +97,14 @@
         }
         if(!$success || ($all_routes === null)) retResponse(404, 'Invalid Route');
         return $matchedRoute;
+    }
+
+    function fetchJWTData($token){
+        require_once(BASE_PHYSICAL_PATH.'/_library/jwt/jwt.php');
+        $GLOBALS['bearer_token']['decoded'] = jwtDecode($token, JWT_SECRET, JWT_ALGO);
+    }
+
+    function generateJWT($data){
+        require_once(BASE_PHYSICAL_PATH.'/_library/jwt/jwt.php');
+        return jwtEncode($data, JWT_SECRET, JWT_ALGO);
     }

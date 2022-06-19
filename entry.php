@@ -10,5 +10,6 @@
     $fileName = __DIR__ . '/_view' . $matchedRouteData["path"];
     if (! file_exists($fileName)) retResponse(404, "Route Defined, File Not Found - $fileName");
     essentialCall($matchedRouteData["auth"]);
+    if($matchedRouteData["auth"]) $jwtdata = fetchJWTData($bearer_token['encoded']);
     $data = getJsonFromBody();
     include_once($fileName);
