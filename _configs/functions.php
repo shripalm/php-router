@@ -51,6 +51,7 @@
         if($auth){
             $token = getBearerToken();
             $GLOBALS['bearer_token']['encoded'] = $token;
+            fetchJWTData($token);
         }
     }
 
@@ -67,6 +68,7 @@
         $routeWithoutBaseURL = str_replace_first(BASE_URL, "", $routeWithoutQueryParams);
         $route = str_replace('//', '/', $routeWithoutBaseURL);
         if($route[0] !== '/') $route = '/'.$route;
+        $route = rtrim($route, '/');
         return $route; 
     }
 
@@ -78,12 +80,16 @@
         foreach ($all_routes as $key => $value) {
             $success = true;
             $routeToCheck = explode('/', $key);
-            foreach ($routeToCheck as $rtc_key => $rtc_value){
-                if($rtc_value[0] === ':') {
-                    $GLOBALS['route_params'][ltrim($rtc_value, ':')] = $route[$rtc_key];
+            if(count($route) !== count($routeToCheck)){
+                $success = false;
+                continue;
+            }
+            foreach ($route as $rtc_key => $rtc_value){
+                if($routeToCheck[$rtc_key][0] === ':') {
+                    $GLOBALS['route_params'][ltrim($routeToCheck[$rtc_key], ':')] = $rtc_value;
                 }
                 else{
-                    if($rtc_value !== $route[$rtc_key]){
+                    if($rtc_value !== $routeToCheck[$rtc_key]){
                         $success = false;
                         break;
                     }
@@ -92,6 +98,8 @@
             if($success) {
                 $matchedRoute = $value;
                 $matchedRoute['route_params'] = $GLOBALS['route_params'];
+                $matchedRoute['route_matched'] = $key;
+                $matchedRoute['route_asked'] = $GLOBALS['requestedRoute'];
                 break;
             }
         }
@@ -108,3 +116,92 @@
         require_once(BASE_PHYSICAL_PATH.'/_library/jwt/jwt.php');
         return jwtEncode($data, JWT_SECRET, JWT_ALGO);
     }
+
+    function get_requiredFields($payload, $list = []){
+        $returnObject = [];
+        foreach ($list as $key => $value) {
+            if(isset($payload[$value])){
+                $returnObject[$value] = $payload[$value];
+            }
+            else {
+                retResponse(400, "$value is required field", [
+                    "debug" => [
+                        "requestedPayload" => $payload, 
+                        "requiredList" => $list
+                    ]
+                ]);
+            }
+        }
+        return $returnObject;
+    }
+
+    function get_optionalFields($payload, $list = []){
+        $returnObject = [];
+        foreach ($list as $key => $value) {
+            if(isset($payload[$value])){
+                $returnObject[$value] = $payload[$value];
+            }
+        }
+        return $returnObject;
+    }
+
+    function mailToUser($subject, $email, $body){
+        require_once(BASE_PHYSICAL_PATH.'/_library/sendgrid-php/vendor/autoload.php');
+        $email_send = new \SendGrid\Mail\Mail(); 
+        $email_send->setFrom(SENDGRID_MAIL, "Tangle Coder");
+        $email_send->setSubject($subject);
+        $email_send->addTo("$email", "Tangle Coder");
+        $email_send->addContent("text/plain", "$body");
+        $email_send->addContent(
+          "text/html", "$body"
+        );
+        // $sendgrid = new \SendGrid(getenv('SENDGRID_API_KEY'));
+        $sendgrid = new \SendGrid(SENDGRID_ID);
+        try {
+          $response = $sendgrid->send($email_send);
+          if(($response->statusCode() > 199 ) && ($response->statusCode() < 300)){
+            return true;
+          }else{
+            retResponse($response->statusCode(), "SendGrid Error");
+          }
+        } catch (Exception $e) {
+          retResponse(500, 'Caught exception: '. $e->getMessage());
+        }
+    }
+
+
+    function fileUpload($filePayload){
+        $file_path = FILE_LOCATION . CURRENT_TS . "_" . rand(10000, 99999) . "_" . basename($filePayload["name"]);
+        $target_file = BASE_PHYSICAL_PATH . '/' . $file_path;
+        
+        // Check file size
+        if ($filePayload["size"] > MAX_FILE_SIZE) {
+            retResponse(400, "Sorry, your file is too large: ".(MAX_FILE_SIZE/1024/1024)."MB is max Limit");
+        }
+        
+        if (!move_uploaded_file($filePayload["tmp_name"], $target_file)){
+            retResponse(500, "Sorry, there was an error uploading your file, Internal server error", [
+                "tmp" => $filePayload["tmp_name"],
+                "target" => $target_file
+            ]);
+        }
+
+        return $file_path;
+    }
+
+    function randomPassword() {
+        $alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()-+=_';
+        $pass = array(); //remember to declare $pass as an array
+        $alphaLength = strlen($alphabet) - 1; //put the length -1 in cache
+        for ($i = 0; $i < 8; $i++) {
+            $n = rand(0, $alphaLength);
+            $pass[] = $alphabet[$n];
+        }
+        return implode($pass); //turn the array into a string
+    }
+
+    function myUrlDecoder($url){
+        $url = preg_replace("/%u([0-9a-f]{3,4})/i","&#x\\1;",urldecode($url)); 
+        $url = html_entity_decode($url, ENT_SUBSTITUTE,'UTF-8');
+        return $url;
+    }   
