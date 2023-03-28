@@ -12,8 +12,8 @@
     define('JWT_SECRET', 'Bwtey45aaIII=');
     define('JWT_ALGO', 'HS512');
     
-    define('SENDGRID_ID', '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');
-    define('SENDGRID_MAIL', 'shripal.nextstep@gmail.com');
+    define('SENDGRID_ID', '');
+    define('SENDGRID_MAIL', '');
 
     $date = new DateTime();
     $currentTS = $date->getTimestamp();
